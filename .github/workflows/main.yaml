@@ -14,3 +14,8 @@ jobs:
         run: echo "COMMIT_ID=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Save commit ID to file
         run: echo "${{ steps.get_commit_id.outputs.COMMIT_ID }}" > commit_id.txt
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: Build
+          path: /home/runner/commit_id.txt
