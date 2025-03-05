@@ -5,17 +5,39 @@ on:
     branches:
       - main
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Get commit ID
         id: get_commit_id
+        run: |
+          if [[ -n "${GITHUB_SHA}" ]]; then
+            echo "COMMIT_ID=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          else
+            echo "COMMIT_ID=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Checkout code (conditional)
+        if: steps.get_commit_id.outputs.COMMIT_ID == '' # only checkout if GITHUB_SHA was not set.
+        uses: actions/checkout@v4.1.1
+
+      - name: Get commit ID (if checkout occurred)
+        if: steps.get_commit_id.outputs.COMMIT_ID == ''
+        id: get_commit_id_after_checkout
         run: echo "COMMIT_ID=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Save commit ID to file
-        run: echo "${{ steps.get_commit_id.outputs.COMMIT_ID }}" > commit_id.txt
+        run: |
+          if [[ -n "${{ steps.get_commit_id.outputs.COMMIT_ID }}" ]]; then
+            COMMIT_ID="${{ steps.get_commit_id.outputs.COMMIT_ID }}"
+          else
+            COMMIT_ID="${{ steps.get_commit_id_after_checkout.outputs.COMMIT_ID }}"
+          fi
+          echo "$COMMIT_ID" > commit_id.txt
+
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.6.0
         with:
           name: Build
-          path: /home/runner/commit_id.txt
+          path: commit_id.txt
