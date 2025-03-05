@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 jobs:
   build:
-    runs-on: ubuntu
+    runs-on: ubuntu-latest
     steps:
       - name: Get commit ID
         id: get_commit_id
